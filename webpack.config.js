@@ -5,14 +5,28 @@ const path = require('path');
 
 module.exports = (env, argv) => ({
     entry: [
-        './src/index.js',
+        './src/scripts/main.js',
     ],
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'main.[hash].js'
     },
+    resolve: {
+        // Aliases for imports
+        alias: {
+            scripts: path.resolve(__dirname, 'src/scripts'),
+            styles: path.resolve(__dirname, 'src/styles')
+        }
+    },
     module: {
         rules: [
+            {
+                test: /\.js$/,
+                exclude: /node_modules/,
+                use: {
+                  loader: "babel-loader"
+                }
+            },
             {
                 test: /\.html$/,
                 use: [
