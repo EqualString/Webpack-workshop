@@ -1,4 +1,5 @@
 const webpack = require('webpack');
+const chokidar = require('chokidar');
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CleanWebpackPlugin = require('clean-webpack-plugin');
@@ -18,26 +19,36 @@ module.exports = (env, argv) => ({
         // Aliases for imports
         alias: {
             scripts: path.resolve(__dirname, 'src/scripts'),
-            styles: path.resolve(__dirname, 'src/styles')
+            styles: path.resolve(__dirname, 'src/styles'),
         }
     },
     module: {
         rules: [
             {
-                test: /\.js$/,
-                exclude: /node_modules/,
-                use: {
-                  loader: "babel-loader"
-                }
-            },
-            {
                 test: /\.html$/,
                 use: [
                     {
-                        loader: "html-loader",
-                        options: { minimize: false }
+                        loader: 'html-loader',
+                        options: {
+                            minimize: false,
+                            attributes: false, // Disables attributes processing
+                        }
                     }
                 ]
+            },
+            {
+                test: /\.(png|jpe?g|gif)$/i,
+                loader: 'file-loader',
+                options: {
+                    esModule: false,
+                },
+            },
+            {
+                test: /\.js$/,
+                exclude: /node_modules/,
+                use: {
+                  loader: 'babel-loader'
+                }
             },
             {
                 test: /\.css$/,
@@ -110,6 +121,16 @@ module.exports = (env, argv) => ({
         port: 3000,
         hot: true,
         progress: false,
-        contentBase: './dist'
+        contentBase: path.join(__dirname, 'dist'),
+        before(app, server) {
+            // Workaround for reload on html files changes
+            // [If we set content base to "src" and set "watchContentBase" to true, full page refresh will be triggered each time]
+            chokidar.watch([
+                './src/**/*.html'
+            ]).on('all', function() {
+                // Force reload
+                server.sockWrite(server.sockets, 'content-changed');
+            })
+        }
     },
 });
