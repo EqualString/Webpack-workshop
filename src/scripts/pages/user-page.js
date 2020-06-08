@@ -5,7 +5,7 @@ async function getUserData(username) {
         // Get response from API
         const response = await fetchData(username)
 
-        // Logic goes here
+        // Logic goes here..
         console.log(response)
     } catch (e) {
         console.error('Fetching data error!',e)
@@ -13,4 +13,4 @@ async function getUserData(username) {
 }
 
 // Init function
-getUserData('EqualString')
+// getUserData('EqualString')

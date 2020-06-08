@@ -1,6 +1,9 @@
+const webpack = require('webpack');
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const TerserJSPlugin = require('terser-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const path = require('path');
 
 module.exports = (env, argv) => ({
@@ -38,22 +41,60 @@ module.exports = (env, argv) => ({
             },
             {
                 test: /\.css$/,
-                use: [ 
+                use: [
                     argv.mode !== 'production' ? 'style-loader' : MiniCssExtractPlugin.loader,
-                    'css-loader'
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            sourceMap: true,
+                        }
+                    },
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            sourceMap: true,
+                            config: {
+                                path: 'postcss.config.js'
+                            }
+                        }
+                    },
                 ]
             },
             {
                 test: /\.(sc|sa)ss$/,
                 use: [
                     argv.mode !== 'production' ? 'style-loader' : MiniCssExtractPlugin.loader, // creates style nodes from JS strings or extract to separate file
-                    "css-loader", // translates CSS into CommonJS
-                    "sass-loader", // compiles Sass to CSS
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            sourceMap: true,
+                        }
+                    },
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            sourceMap: true,
+                            config: {
+                                path: 'postcss.config.js'
+                            }
+                        }
+                    },
+                    {
+                        loader: 'sass-loader',
+                        options: {
+                            sourceMap: true
+                        }
+                    }
                 ]
             },
         ]
     },
+    optimization: {
+        // Minify JS & CSS
+        minimizer: [new TerserJSPlugin({}), new OptimizeCSSAssetsPlugin({})],
+    },
     plugins: [
+        new webpack.ProgressPlugin(),
         new HtmlWebPackPlugin({
             template: "./src/index.html",
             filename: "./index.html"
@@ -66,7 +107,9 @@ module.exports = (env, argv) => ({
     ],
     devServer: {
         open: true,
-        port: 3000,  
+        port: 3000,
+        hot: true,
+        progress: false,
         contentBase: './dist'
     },
 });
